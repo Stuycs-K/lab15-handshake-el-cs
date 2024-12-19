@@ -10,12 +10,15 @@
   returns the file descriptor for the upstream pipe.
   =========================*/
 int server_setup() {
-  int from_client = 0;
+  mkfifo(WKP, 0777);
+  int from_client = open(WKP, O_WRONLY, 0777);
+  close(f);
+  remove(WKP);
   return from_client;
 }
 
 /*=========================
-  server_handshake 
+  server_handshake
   args: int * to_client
 
   Performs the server side pipe 3 way handshake.
@@ -24,7 +27,10 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
-  int from_client;
+  int from_client = server_setup();
+  char buff[100];
+  read(SYN, buff, 100);
+  int pp = open(buff, O_RDONLY, 0777);
   return from_client;
 }
 
@@ -40,6 +46,9 @@ int server_handshake(int *to_client) {
   =========================*/
 int client_handshake(int *to_server) {
   int from_server;
+  char pp[100];
+  sprintf(pp, "%d", getpid());
+  mkfifo(pp, 0777);
   return from_server;
 }
 
@@ -56,5 +65,3 @@ int server_connect(int from_client) {
   int to_client  = 0;
   return to_client;
 }
-
-

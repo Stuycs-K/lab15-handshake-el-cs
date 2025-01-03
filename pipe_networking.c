@@ -22,8 +22,7 @@ int server_setup() {
   printf("server making pipe\n");
   mkfifo(WKP, 0777);
   printf("server opening wkp\n");
-  int from_client = open(WKP, O_WRONLY, 0777);
-  close(f);
+  int from_client = open(WKP, O_RDONLY, 0777);
   printf("server removing wkp\n");
   remove(WKP);
   return from_client;
@@ -42,15 +41,22 @@ int server_handshake(int *to_client) {
   int from_client = server_setup();
   char buff[100];
   printf("server reading SYN\n");
-  read(SYN, buff, 100);
+  read(from_client, buff, 100);
   printf("server opening private pipe\n");
-  int pp = open(buff, O_RDONLY, 0777);
+  int pp = open(buff, O_WRONLY, 0777);
   *to_client = pp;
   printf("server sending SYN_ACK\n");
-  long * p = &(long)randint();
-  int pp2 = open(buff, O_WRONLY, 0777);
-  write(pp2, (char *)p, 100);
+  int p = randint();
+  char buff2[100];
+  sprintf(buff2, "%d", p);
+  write(pp, buff2, 100);
   printf("server reading final ACK\n");
+  char buff3[100];
+  read(from_client, buff3, 100);
+  int n;
+  sscanf(buff3, "%d", &n);
+  if (p + 1 == n) printf("handshake successful\n");
+  else printf("handshake failed\n");
   return from_client;
 }
 
@@ -65,21 +71,28 @@ int server_handshake(int *to_client) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int client_handshake(int *to_server) {
-  int from_server;
   char pp[100];
   sprintf(pp, "%d", getpid());
   printf("client making private pipe\n");
   mkfifo(pp, 0777);
   printf("client opening WKP\n");
   int wkp = open(WKP, O_WRONLY, 0777);
+  *to_server = wkp;
   printf("client writing PP to WKP\n");
-  int pp = open(pp, O_RDONLY, 0777);
-  write()
-  // write pp to wkp
-  // open pp
-  // delete pp
-  // read SYN_ACK
-  // send ACK
+  write(wkp, pp, 100);
+  printf("client opening PP\n");
+  int ppf = open(pp, O_RDONLY, 0777);
+  int from_server = ppf;
+  printf("client deleting PP\n");
+  remove(pp);
+  printf("client reading SYN_ACK\n");
+  char buff[100];
+  read(ppf, buff, 100);
+  int n;
+  sscanf(buff, "%d", &n);
+  printf("client sending ACK\n");
+  sprintf(buff, "%d", n+1);
+  write(wkp, buff, 100);
   return from_server;
 }
 

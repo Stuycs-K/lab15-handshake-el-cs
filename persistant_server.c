@@ -21,6 +21,5 @@ int main() {
     write(to_client, &n, sizeof(int));
     sleep(1);
   }
-  close(to_client);
-  close(from_client);
+  printf("ok\n");
 }

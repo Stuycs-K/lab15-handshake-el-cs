@@ -42,7 +42,7 @@ int server_handshake(int *to_client) {
   char buff[100];
   printf("server reading SYN\n");
   read(from_client, buff, 100);
-  printf("server opening private pipe\n");
+  printf("server opening private pipe (%s)\n", buff);
   int pp = open(buff, O_WRONLY, 0777);
   *to_client = pp;
   printf("server sending SYN_ACK\n");
@@ -73,7 +73,7 @@ int server_handshake(int *to_client) {
 int client_handshake(int *to_server) {
   char pp[100];
   sprintf(pp, "%d", getpid());
-  printf("client making private pipe\n");
+  printf("client making private pipe (%s)\n", pp);
   mkfifo(pp, 0777);
   printf("client opening WKP\n");
   int wkp = open(WKP, O_WRONLY, 0777);
@@ -108,4 +108,25 @@ int client_handshake(int *to_server) {
 int server_connect(int from_client) {
   int to_client  = 0;
   return to_client;
+}
+
+void server_handshake_half(int *to_client, int from_client) {
+  char buff[100];
+  printf("server reading SYN\n");
+  read(from_client, buff, 100);
+  printf("server opening private pipe (%s)\n", buff);
+  int pp = open(buff, O_WRONLY, 0777);
+  *to_client = pp;
+  printf("server sending SYN_ACK\n");
+  int p = randint();
+  char buff2[100];
+  sprintf(buff2, "%d", p);
+  write(pp, buff2, 100);
+  printf("server reading final ACK\n");
+  char buff3[100];
+  read(from_client, buff3, 100);
+  int n;
+  sscanf(buff3, "%d", &n);
+  if (p + 1 == n) printf("handshake successful\n");
+  else printf("handshake failed\n");
 }

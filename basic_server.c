@@ -14,6 +14,7 @@ int main() {
   int from_client;
 
   from_client = server_handshake( &to_client );
+  close(to_client);
 
   while (1) {
     int n = (int)((unsigned int)randint2() % 101);
